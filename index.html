@@ -140,9 +140,42 @@ const hero=document.getElementById('hero'),cv=document.getElementById('clouds'),
  ti=document.getElementById('title'),ca=document.getElementById('caption'),
  nav=document.getElementById('nav'),belt=document.getElementById('belt'),fd=document.getElementById('fade'),
  PH=[...belt.querySelectorAll('.ph')];
-const imgs=FRAMES.map(s=>{const i=new Image();i.onload=()=>{if(i===imgs[cur])draw()};i.src=s;return i});
 const N=FRAMES.length,X=1,LOOP=N-X,FPS=12,still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const FRAME_BUFFER=4,imgs=Array(N).fill(null);
 let cur=0,W=0,H=0,p=0,last=0,acc=0;
+function frameAt(offset){return cur===0?offset:((cur-1+offset)%LOOP)+1}
+function frameIsWanted(index){
+ if(index===0||index===cur)return true;
+ if(still||p>=.80)return false;
+ for(let offset=0;offset<FRAME_BUFFER;offset++)if(frameAt(offset)===index)return true;
+ return false
+}
+function loadFrame(index){
+ if(imgs[index])return;
+ const image=new Image();
+ imgs[index]=image;
+ image.decoding='async';
+ image.fetchPriority=index===cur?'high':'low';
+ image.onload=()=>{if(index===cur||(cur>=LOOP&&index===cur-LOOP))draw();preloadFrames()};
+ image.onerror=()=>{
+  console.error('Unable to load cloud frame '+index);
+  if(imgs[index]===image)imgs[index]=null;
+  setTimeout(()=>{if(frameIsWanted(index))loadFrame(index)},1000)
+ };
+ image.src=FRAMES[index]
+}
+function preloadFrames(){
+ loadFrame(0);
+ const keep=new Set([0,cur]);
+ if(!still&&p<.80){
+  for(let offset=0;offset<FRAME_BUFFER;offset++){
+   const index=frameAt(offset);
+   keep.add(index);
+   loadFrame(index)
+  }
+ }
+ for(let index=1;index<N;index++)if(!keep.has(index)&&imgs[index]?.complete)imgs[index]=null
+}
 const makingof=document.getElementById('makingof'),MAKINGOF_FPS=12,MAKINGOF_COUNT=129;
 let makingofFrame=0,makingofNext=null,makingofReady=false,makingofLast=0,makingofAcc=0;
 const mail=document.getElementById('mail'),copyMessage=document.getElementById('copy-message');
@@ -198,8 +231,13 @@ function draw(){ctx.clearRect(0,0,W,H);
  if(cur>=LOOP){const fade=(cur-LOOP+1)/X;ctx.globalCompositeOperation='lighter';put(cur,1-fade);put(cur-LOOP,fade);ctx.globalCompositeOperation='source-over'}
  else put(cur,1)} /* fondu croisé de la dernière image vers la première : boucle sans saut */
 function tick(now){
- if(p<.80&&!still){acc+=now-last;const step=1000/FPS;
-  if(acc>=step){cur+=Math.floor(acc/step);acc%=step;if(cur>=N)cur=X+(cur-N)%LOOP;draw()}}
+ if(p<.80&&!still){
+  const next=cur>=N-1?X:cur+1,step=1000/FPS;
+  if(imgs[next]?.complete&&imgs[next].naturalWidth){
+   acc+=now-last;
+   if(acc>=step){cur=next;acc%=step;draw();preloadFrames()}
+  }else acc=Math.min(acc,step)
+ }
  last=now;requestAnimationFrame(tick)}
 /* ---- RÉGLAGES DE LA DESCENTE (p = avancement du scroll, de 0 à 1) ---- */
 const FEU=25;           /* hauteur du fondu entre deux images (en % de l'écran) */
@@ -220,6 +258,7 @@ nav.querySelectorAll('a[href^="#"]').forEach(link=>link.addEventListener('click'
 }));
 function update(){
  const r=hero.getBoundingClientRect();p=clamp(-r.top/(r.height-innerHeight));
+ preloadFrames();
  /* la boucle puis les nuages montent ensemble, collés l'un à l'autre : on passe sous les nuages */
  const T=TOTAL*lin(p,DEBUT,FIN);
  belt.style.transform='translateY('+(-T)+'%)';
@@ -232,7 +271,7 @@ function update(){
 }
 addEventListener('scroll',()=>requestAnimationFrame(update),{passive:true});
 addEventListener('resize',()=>{size();update()});
-size();update();requestAnimationFrame(n=>{last=n;tick(n)});requestAnimationFrame(animateMakingof);
+preloadFrames();size();update();requestAnimationFrame(n=>{last=n;tick(n)});requestAnimationFrame(animateMakingof);
 </script>
 </body>
 </html>
