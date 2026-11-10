@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Songe Animation – studio de stop-motion</title>
+<link rel="icon" type="image/webp" href="assets/S_LOGO.webp">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300;1,400&family=Noticia+Text:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--night:#141937;--bg:#141937;--fg:#f1ecfa;--muted:#aeb4dd;--card:#1f2552;--felt:#e58fa0;--moon:#f2c75c;--glow:#fff1c9;
+ color-scheme:dark;box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--night)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--night);color:var(--fg);font:400 1.15rem/1.65 "Noticia Text",Georgia,serif}
+h1,h2,h3,.nav a,.btn{font-family:"Alte Haas Grotesk","Helvetica Neue",Arial,sans-serif}
+a{color:inherit}:focus-visible{outline:3px solid var(--moon);outline-offset:3px}
+.wrap{max-width:68rem;margin:0 auto;padding:0 1.5rem}
+.nav{position:fixed;z-index:10;top:env(safe-area-inset-top,0px);left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:1rem 1.5rem;color:#f1ecfa;font-weight:700;transition:background .3s}
+.nav.solid{background:var(--night)}
+.nav a{text-decoration:none;margin-left:1.25rem;font-weight:400}.nav .logo{display:flex;align-items:center;gap:.45rem;margin:0;font-weight:800}
+.logo-mark{display:flex;align-items:center;height:1.15em}
+.logo-mark span{display:inline-block;height:100%;animation:boil .8s steps(1) infinite}
+.logo-mark span:nth-child(2){animation-delay:-.2s}.logo-mark span:nth-child(3){animation-delay:-.4s}
+.logo-mark span:nth-child(4){animation-delay:-.6s}.logo-mark span:nth-child(5){animation-delay:-.3s}
+.logo-mark img{display:block;height:100%;width:auto}
+.nav a:hover{text-decoration:underline;text-underline-offset:4px}
+
+/* Descente sous les nuages */
+.hero{height:300vh;position:relative}
+.stage{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;background:var(--night) url("assets/fondciel.avif") center/cover no-repeat;color:#f1ecfa}
+.stage img,.stage video,.stage canvas{position:absolute;inset:0;width:100%;height:100%;will-change:transform,opacity}
+.stage img,.stage video{object-fit:cover;object-position:60% 100%;opacity:0}
+#makingof{top:auto;right:0;bottom:10%;left:auto;width:90%;height:90%;border-bottom-left-radius:1.5rem;opacity:1;-webkit-mask-image:linear-gradient(to bottom,#000 70%,transparent);mask-image:linear-gradient(to bottom,#000 70%,transparent)}
+/* Une seule bande verticale (.belt) : la boucle en haut, puis les photos de nuages collées en dessous.
+   Au scroll, toute la bande monte d'un bloc. Chaque photo a un haut en dégradé pour se fondre dans la précédente. */
+.belt{position:absolute;inset:0;will-change:transform}
+.belt .ph{position:absolute;left:0;width:100%;height:100%;
+ -webkit-mask-image:linear-gradient(to bottom,transparent,#000 var(--feu,34%));mask-image:linear-gradient(to bottom,transparent,#000 var(--feu,34%))}
+.stage .belt .ph img{opacity:1;object-position:50% 70%}
+.stage .belt .ph video{opacity:1}
+.stage canvas{--f:0;
+ -webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - var(--f)*1%),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - var(--f)*1%),transparent)}
+.stage .belt .ph img[data-flip]{transform:scaleX(-1)}
+.fade{position:absolute;left:0;right:0;bottom:0;height:30%;background:linear-gradient(transparent,var(--night));opacity:0;pointer-events:none}
+.title{position:absolute;left:0;right:0;top:10vh;padding:0 1.5rem;max-width:68rem;margin:0 auto;will-change:opacity}
+.title h1{display:none;align-items:center;font-size:clamp(1.667rem,5.667vw,4.333rem);height:1em;margin:0 0 0 clamp(-3rem,-4vw,-.25rem);filter:drop-shadow(0 0 .12em rgba(255,241,201,.9)) drop-shadow(0 0 .4em rgba(242,199,92,.55)) drop-shadow(0 0 1em rgba(160,170,255,.45));animation:lueur 2.4s steps(1) infinite}
+.title h1 span{display:inline-block;height:100%;animation:boil .8s steps(1) infinite}
+.title h1 img{position:static;inset:auto;display:block;height:100%;width:auto;opacity:1}
+.title h1 span:nth-child(2){animation-delay:-.2s}.title h1 span:nth-child(3){animation-delay:-.4s}
+.title h1 span:nth-child(4){animation-delay:-.6s}.title h1 span:nth-child(5){animation-delay:-.3s}
+@keyframes boil{0%{transform:translate(0,0) rotate(-.6deg)}25%{transform:translate(1px,-2px) rotate(.4deg)}50%{transform:translate(-1px,1px) rotate(-.2deg)}75%{transform:translate(1px,2px) rotate(.7deg)}}
+@keyframes lueur{0%{filter:drop-shadow(0 0 .12em rgba(255,241,201,.9)) drop-shadow(0 0 .4em rgba(242,199,92,.55)) drop-shadow(0 0 1em rgba(160,170,255,.45))}
+ 33%{filter:drop-shadow(0 0 .1em rgba(255,241,201,.8)) drop-shadow(0 0 .5em rgba(242,199,92,.7)) drop-shadow(0 0 1.2em rgba(160,170,255,.5))}
+ 66%{filter:drop-shadow(0 0 .14em rgba(255,241,201,1)) drop-shadow(0 0 .35em rgba(242,199,92,.5)) drop-shadow(0 0 .9em rgba(160,170,255,.4))}}
+.sub{font-size:clamp(1.2rem,3vw,1.7rem);max-width:30ch;margin:1.4rem 0 .8rem;line-height:1.35;font-style:italic;text-shadow:0 1px 12px var(--night)}
+.hint{font-size:1rem;opacity:.85;margin:0;text-shadow:0 1px 10px var(--night)}
+.caption{position:absolute;left:0;right:0;top:14vh;padding:0 1.5rem;max-width:68rem;margin:0 auto;opacity:0;text-shadow:0 2px 18px var(--night)}
+.caption h2{display:flex;align-items:center;height:clamp(3rem,8vw,6rem);margin:0 0 2rem;filter:drop-shadow(0 0 .12em rgba(255,241,201,.9)) drop-shadow(0 0 .4em rgba(242,199,92,.55)) drop-shadow(0 0 1em rgba(160,170,255,.45));animation:lueur 2.4s steps(1) infinite}
+.caption h2 span{display:inline-block;height:100%;animation:boil .8s steps(1) infinite}
+.caption h2 span:nth-child(2){animation-delay:-.2s}.caption h2 span:nth-child(3){animation-delay:-.4s}
+.caption h2 span:nth-child(4){animation-delay:-.6s}.caption h2 span:nth-child(5){animation-delay:-.3s}
+.caption h2 img{position:static;inset:auto;display:block;height:100%;width:auto;opacity:1}
+.caption p{max-width:30ch;margin:0;font-size:clamp(1.1rem,2vw,1.4rem);line-height:1.5}
+.caption p+p{margin-top:1rem;color:var(--muted);font-size:clamp(1rem,1.8vw,1.2rem)}
+@media(min-width:48rem){
+ .stage #makingof{width:60%;height:90%;object-position:70% 50%;-webkit-mask-image:linear-gradient(90deg,transparent,#000 32%),linear-gradient(to bottom,#000 70%,transparent);-webkit-mask-composite:source-in;mask-image:linear-gradient(90deg,transparent,#000 32%),linear-gradient(to bottom,#000 70%,transparent);mask-composite:intersect}
+ .caption{top:0;bottom:0;right:auto;width:48%;margin:0;display:flex;flex-direction:column;justify-content:center;padding-left:clamp(1.5rem,7vw,6rem)}
+ .caption p{max-width:40ch}
+}
+
+section{padding:4.5rem 0}
+h2{font-size:clamp(2rem,5vw,3.2rem);line-height:1.05;margin:0 0 2rem;letter-spacing:-.02em}
+#films{position:relative;padding:0}
+.films{display:grid;gap:0}
+.film{position:relative;min-height:100vh;min-height:100svh;margin:0;overflow:hidden;background:var(--night);isolation:isolate}
+.film::after{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(20,25,55,.35),transparent 35%,rgba(20,25,55,.8));content:""}
+.film video{position:absolute;inset:0;z-index:-2;width:100%;height:100%;object-fit:cover;object-position:center 55%;-webkit-mask-image:linear-gradient(to bottom,transparent,#000 6%,#000 94%,transparent);mask-image:linear-gradient(to bottom,transparent,#000 6%,#000 94%,transparent)}
+#films h2{margin:0;padding:clamp(1.5rem,5vw,3rem) max(1.5rem,calc((100vw - 65rem)/2));color:var(--glow);font-size:clamp(2rem,5vw,3.2rem)}
+.film figcaption{position:absolute;right:1.5rem;bottom:clamp(2rem,8vh,6rem);left:1.5rem;max-width:65rem;margin:0 auto;color:var(--fg);text-shadow:0 2px 18px var(--night)}
+.film h3{margin:0 0 .5rem;font-size:clamp(2.5rem,8vw,5.5rem);line-height:1}
+.film p{max-width:45ch;margin:0;font-size:clamp(1.1rem,2.4vw,1.4rem)}
+.contact{min-height:50vh;min-height:50svh;display:flex;align-items:center;overflow:hidden;background:var(--card)}
+.contact .wrap{width:100%;display:grid;grid-template-columns:minmax(0,1fr) max-content;align-items:center;gap:clamp(2rem,6vw,5rem);padding-top:clamp(3rem,7vh,5rem);padding-bottom:clamp(3rem,7vh,5rem)}
+.contact h2{max-width:none;margin:0 0 1rem;color:var(--glow);font-size:clamp(1.5rem,4.5vw,3.8rem);line-height:1.05;letter-spacing:-.035em;white-space:nowrap;text-shadow:0 0 .4em rgba(242,199,92,.2)}
+.contact p{max-width:38ch;margin:0;color:var(--muted);font-size:clamp(1.05rem,1.8vw,1.3rem);line-height:1.5}
+.mail-wrap{display:flex;flex-direction:column;align-items:flex-start;gap:.65rem}
+.mail{display:inline-flex;align-items:center;max-width:100%;padding:.8rem 1rem;border:1px solid rgba(242,199,92,.55);border-radius:999px;color:var(--glow);font:800 clamp(1rem,1.7vw,1.35rem)/1.2 "Alte Haas Grotesk",sans-serif;text-decoration:none;overflow-wrap:anywhere;transition:background .25s,border-color .25s,transform .25s}
+.copy-message{min-height:1.5em;margin:0;color:var(--muted);font-size:.95rem}
+.mail:hover{transform:translateY(-3px);border-color:var(--moon);background:rgba(242,199,92,.12)}
+.mail:focus-visible{outline-offset:5px}
+footer{padding:2rem 0;color:var(--muted);font-size:.95rem}
+@media (prefers-reduced-motion:reduce){.title h1,.title h1 span,.caption h2,.caption h2 span,.logo-mark span{animation:none}}
+@media (max-width:48rem){.contact .wrap{grid-template-columns:1fr;gap:1.75rem}.mail{justify-self:start}}
+@media (max-width:40rem){.nav{padding:.8rem 1rem}.nav a{white-space:nowrap}.nav a:not(.logo){margin-left:.35rem;font-size:.72rem}.nav .logo{gap:.25rem;font-size:.78rem}.logo-mark{height:1em}}
+</style>
+</head>
+<body>
+<header class="nav" id="nav">
+  <a class="logo" href="#top" aria-label="Songe Animation"><span class="logo-mark" aria-hidden="true"><span><img src="assets/S_LOGO.webp" alt=""></span><span><img src="assets/O_LOGO.webp" alt=""></span><span><img src="assets/N_LOGO.webp" alt=""></span><span><img src="assets/G_LOGO.webp" alt=""></span><span><img src="assets/E_LOGO.webp" alt=""></span></span><span>Animation</span></a>
+  <nav><a href="#makingof">À propos</a><a href="#films">Films</a><a href="#contact">Contact</a></nav>
+</header>
+
+<main id="top">
+  <div class="hero" id="hero">
+    <div class="stage">
+      <div class="belt" id="belt">
+        <div class="ph"><img src="assets/c7.webp" alt=""></div>
+        <div class="ph"><img id="makingof" src="assets/makingof%2000000001.webp" alt="Making-of : la main d'un animateur déplace une barque près d'un ponton, au milieu des nuages"></div>
+        <canvas id="clouds" role="img" aria-label="Un ponton avec une lanterne et une barque sur une mer de nuages"></canvas>
+      </div>
+      <div class="fade" id="fade"></div>
+      <div class="title" id="title">
+        <h1 aria-label="Songe"><span aria-hidden="true"><img src="assets/S_LOGO.webp" alt=""></span><span aria-hidden="true"><img src="assets/O_LOGO.webp" alt=""></span><span aria-hidden="true"><img src="assets/N_LOGO.webp" alt=""></span><span aria-hidden="true"><img src="assets/G_LOGO.webp" alt=""></span><span aria-hidden="true"><img src="assets/E_LOGO.webp" alt=""></span></h1>
+        <p class="sub"></p>
+        <p class="hint"></p>
+      </div>
+      <div class="caption" id="caption">
+        <h2 aria-label="Songe"><span aria-hidden="true"><img src="assets/S_LOGO.webp" alt=""></span><span aria-hidden="true"><img src="assets/O_LOGO.webp" alt=""></span><span aria-hidden="true"><img src="assets/N_LOGO.webp" alt=""></span><span aria-hidden="true"><img src="assets/G_LOGO.webp" alt=""></span><span aria-hidden="true"><img src="assets/E_LOGO.webp" alt=""></span></h2>
+        <p>Spécialisés dans le stop-motion, nous imaginons et fabriquons des films sur mesure, entièrement faits main.</p>
+        <p>Un soupçon de poésie, une bonne dose de savoir-faire artisanal et une identité visuelle forte pour raconter vos histoires autrement.</p>
+      </div>
+    </div>
+  </div>
+
+  <section id="films" aria-label="Nos films"><h2>Nos films</h2><div class="films">
+    <figure class="film"><video src="assets/film1.mp4" autoplay muted loop playsinline preload="metadata" poster="assets/film1.webp" aria-label="Petit plafond, avec un personnage en stop-motion dans une pièce bleue"></video></figure>
+    <figure class="film"><video src="assets/film2.mp4" autoplay muted loop playsinline preload="metadata" poster="assets/film2.webp" aria-label="Overtime, avec une marionnette de mannequin de crash-test"></video></figure>
+  </div></section>
+
+  <section id="contact" class="contact"><div class="wrap"><div class="contact-copy"><h2>Un projet en tête&nbsp;?</h2>
+    <p>Et si on lui donnait vie, image par image&nbsp;? Film, clip, publicité ou idée encore en train de germer : racontez-nous.</p></div>
+    <div class="mail-wrap"><a class="mail" id="mail" href="mailto:contact@songeanimation.com">contact@songeanimation.com</a><p class="copy-message" id="copy-message" aria-live="polite"></p></div></div></section>
+</main>
+<footer class="wrap">© 2026 Songe Animation. Tous droits réservés.</footer>
+
+<script>
+const FRAMES=Array.from({length:59},(_,i)=>'assets/f'+String(i).padStart(8,'0')+'.webp'); /* 59 images de la boucle de nuages */
+const hero=document.getElementById('hero'),cv=document.getElementById('clouds'),ctx=cv.getContext('2d'),
+ ti=document.getElementById('title'),ca=document.getElementById('caption'),
+ nav=document.getElementById('nav'),belt=document.getElementById('belt'),fd=document.getElementById('fade'),
+ PH=[...belt.querySelectorAll('.ph')];
+const imgs=FRAMES.map(s=>{const i=new Image();i.onload=()=>{if(i===imgs[cur])draw()};i.src=s;return i});
+const N=FRAMES.length,X=1,LOOP=N-X,FPS=12,still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let cur=0,W=0,H=0,p=0,last=0,acc=0;
+const makingof=document.getElementById('makingof'),MAKINGOF_FPS=12,MAKINGOF_COUNT=129;
+let makingofFrame=0,makingofNext=null,makingofReady=false,makingofLast=0,makingofAcc=0;
+const mail=document.getElementById('mail'),copyMessage=document.getElementById('copy-message');
+mail.addEventListener('click',async event=>{
+ event.preventDefault();
+ const address=mail.textContent.trim();
+ try{
+  await navigator.clipboard.writeText(address);
+  copyMessage.textContent='Adresse copiée dans le presse-papiers.';
+ }catch(error){
+  const field=document.createElement('textarea');
+  field.value=address;field.setAttribute('readonly','');field.style.position='fixed';field.style.opacity='0';
+  let copied=false;
+  document.body.appendChild(field);
+  try{field.select();copied=document.execCommand('copy')}
+  catch(fallbackError){console.error('Clipboard copy fallback failed.',fallbackError)}
+  finally{field.remove()}
+  if(copied)copyMessage.textContent='Adresse copiée dans le presse-papiers.';
+  else{
+   console.error('Unable to copy the email address to the clipboard.',error);
+   copyMessage.textContent='Copie impossible. Vous pouvez sélectionner et copier l’adresse.';
+  }
+ }
+});
+function preloadMakingof(){
+ if(makingofNext||still)return;
+ const next=(makingofFrame+1)%MAKINGOF_COUNT,image=new Image();
+ image.onload=()=>{makingofReady=true};
+ image.onerror=()=>console.error('Unable to load making-of frame '+String(next+1).padStart(8,'0'));
+ image.src='assets/makingof%20'+String(next+1).padStart(8,'0')+'.webp';
+ makingofNext=image;
+}
+function animateMakingof(now){
+ requestAnimationFrame(animateMakingof);
+ if(still||p<.55){makingofLast=now;return}
+ if(makingofLast)makingofAcc+=now-makingofLast;
+ makingofLast=now;
+ preloadMakingof();
+ if(makingofReady&&makingofAcc>=1000/MAKINGOF_FPS){
+  makingofAcc%=1000/MAKINGOF_FPS;
+  makingof.src=makingofNext.src;
+  makingofFrame=(makingofFrame+1)%MAKINGOF_COUNT;
+  makingofNext=null;makingofReady=false;
+  preloadMakingof();
+ }else if(!makingofReady)makingofAcc=Math.min(makingofAcc,1000/MAKINGOF_FPS);
+}
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x)),ease=x=>x*x*(3-2*x),seg=(q,a,b)=>ease(clamp((q-a)/(b-a)));
+function size(){const d=Math.min(devicePixelRatio||1,2);W=cv.clientWidth*d;H=cv.clientHeight*d;cv.width=W;cv.height=H;draw()}
+function put(i,al){const m=imgs[i];if(!m||!m.complete||!m.naturalWidth)return;
+ const s=Math.max(W/m.naturalWidth,H/m.naturalHeight),w=m.naturalWidth*s,h=m.naturalHeight*s;
+ ctx.globalAlpha=al;ctx.drawImage(m,(W-w)*.6,H-h,w,h);ctx.globalAlpha=1}
+function draw(){ctx.clearRect(0,0,W,H);
+ if(cur>=LOOP){const fade=(cur-LOOP+1)/X;ctx.globalCompositeOperation='lighter';put(cur,1-fade);put(cur-LOOP,fade);ctx.globalCompositeOperation='source-over'}
+ else put(cur,1)} /* fondu croisé de la dernière image vers la première : boucle sans saut */
+function tick(now){
+ if(p<.80&&!still){acc+=now-last;const step=1000/FPS;
+  if(acc>=step){cur+=Math.floor(acc/step);acc%=step;if(cur>=N)cur=X+(cur-N)%LOOP;draw()}}
+ last=now;requestAnimationFrame(tick)}
+/* ---- RÉGLAGES DE LA DESCENTE (p = avancement du scroll, de 0 à 1) ---- */
+const FEU=25;           /* hauteur du fondu entre deux images (en % de l'écran) */
+const DEBUT=.02,FIN=.70; /* la bande monte entre ces deux moments du scroll */
+const lin=(q,a,b)=>clamp((q-a)/(b-a));
+/* on place chaque photo juste sous la précédente, avec un recouvrement de FEU % */
+PH.forEach((w,k)=>{w.style.setProperty('--feu',FEU+'%');w.style.top=(k===0?55:k===1?140:(k+1)*(100-FEU))+'%'});
+const TOTAL=(document.getElementById('makingof').getBoundingClientRect().top-belt.getBoundingClientRect().top)/belt.clientHeight*100;
+nav.querySelectorAll('a[href^="#"]').forEach(link=>link.addEventListener('click',event=>{
+ const id=link.getAttribute('href').slice(1),target=document.getElementById(id);
+ if(!target)return;
+ event.preventDefault();
+ history.pushState(null,'','#'+id);
+ const top=id==='makingof'
+  ?hero.getBoundingClientRect().top+scrollY+(hero.offsetHeight-innerHeight)*FIN
+  :target.getBoundingClientRect().top+scrollY;
+ scrollTo({top,behavior:still?'auto':'smooth'});
+}));
+function update(){
+ const r=hero.getBoundingClientRect();p=clamp(-r.top/(r.height-innerHeight));
+ /* la boucle puis les nuages montent ensemble, collés l'un à l'autre : on passe sous les nuages */
+ const T=TOTAL*lin(p,DEBUT,FIN);
+ belt.style.transform='translateY('+(-T)+'%)';
+ cv.style.setProperty('--f',Math.min(T,FEU));   /* le bas de la boucle se dissout sur la 1re photo, placée juste dessous */
+ /* la photo du making of apparaît à la fin */
+ belt.style.opacity=1;
+ ti.style.opacity=1-seg(p,.02,.13);ca.style.opacity=seg(p,.14,.30);
+ fd.style.opacity=seg(p,.84,.92);
+ nav.classList.toggle('solid',r.bottom<innerHeight*.5);
+}
+addEventListener('scroll',()=>requestAnimationFrame(update),{passive:true});
+addEventListener('resize',()=>{size();update()});
+size();update();requestAnimationFrame(n=>{last=n;tick(n)});requestAnimationFrame(animateMakingof);
+</script>
+</body>
+</html>
