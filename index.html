@@ -6,6 +6,7 @@
 <meta name="color-scheme" content="dark">
 <title>Songe Animation – studio de stop-motion</title>
 <link rel="icon" type="image/webp" href="assets/S_LOGO.webp">
+<link rel="preload" as="image" href="assets/f00000000.webp" fetchpriority="high">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300;1,400&family=Noticia+Text:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
 <style>
 :root{--night:#141937;--bg:#141937;--fg:#f1ecfa;--muted:#aeb4dd;--card:#1f2552;--felt:#e58fa0;--moon:#f2c75c;--glow:#fff1c9;
@@ -13,6 +14,9 @@
 html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--night)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--night);color:var(--fg);font:400 1.15rem/1.65 "Noticia Text",Georgia,serif}
+.loading-screen{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:1.5rem;background:radial-gradient(ellipse at 50% 42%,#252d5a,var(--night) 68%);opacity:1;visibility:visible;transition:opacity .45s,visibility .45s}
+.loading-screen.is-hidden{opacity:0;visibility:hidden;pointer-events:none}
+.loading-screen .logo-mark{height:clamp(3rem,16vw,8rem);filter:drop-shadow(0 0 .2em rgba(255,241,201,.65)) drop-shadow(0 0 .8em rgba(160,170,255,.45))}
 h1,h2,h3,.nav a,.btn{font-family:"Alte Haas Grotesk","Helvetica Neue",Arial,sans-serif}
 a{color:inherit}:focus-visible{outline:3px solid var(--moon);outline-offset:3px}
 .wrap{max-width:68rem;margin:0 auto;padding:0 1.5rem}
@@ -96,6 +100,9 @@ footer{padding:2rem 0;color:var(--muted);font-size:.95rem}
 </style>
 </head>
 <body>
+<div class="loading-screen" id="loading-screen" aria-label="Chargement du site">
+  <div class="logo-mark" role="img" aria-label="Songe"><span><img src="assets/S_LOGO.webp" alt=""></span><span><img src="assets/O_LOGO.webp" alt=""></span><span><img src="assets/N_LOGO.webp" alt=""></span><span><img src="assets/G_LOGO.webp" alt=""></span><span><img src="assets/E_LOGO.webp" alt=""></span></div>
+</div>
 <header class="nav" id="nav">
   <a class="logo" href="#top" aria-label="Songe Animation"><span class="logo-mark" aria-hidden="true"><span><img src="assets/S_LOGO.webp" alt=""></span><span><img src="assets/O_LOGO.webp" alt=""></span><span><img src="assets/N_LOGO.webp" alt=""></span><span><img src="assets/G_LOGO.webp" alt=""></span><span><img src="assets/E_LOGO.webp" alt=""></span></span><span>Animation</span></a>
   <nav><a href="#makingof">À propos</a><a href="#films">Films</a><a href="#contact">Contact</a></nav>
@@ -139,12 +146,22 @@ const FRAMES=Array.from({length:59},(_,i)=>'assets/f'+String(i).padStart(8,'0')+
 const hero=document.getElementById('hero'),cv=document.getElementById('clouds'),ctx=cv.getContext('2d'),
  ti=document.getElementById('title'),ca=document.getElementById('caption'),
  nav=document.getElementById('nav'),belt=document.getElementById('belt'),fd=document.getElementById('fade'),
- PH=[...belt.querySelectorAll('.ph')];
+ PH=[...belt.querySelectorAll('.ph')],loadingScreen=document.getElementById('loading-screen');
 const N=FRAMES.length,X=1,LOOP=N-X,FPS=12,still=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const FRAME_BUFFER=4,imgs=Array(N).fill(null);
-let cur=0,W=0,H=0,p=0,last=0,acc=0;
+let cur=0,W=0,H=0,p=0,last=0,acc=0,loadedFrames=0,loadingFrames=true;
+const failedFrames=new Set();
 function frameAt(offset){return cur===0?offset:((cur-1+offset)%LOOP)+1}
+function updateLoadingScreen(){
+ if(loadedFrames===N&&failedFrames.size===0){
+  loadingFrames=false;
+  loadingScreen.classList.add('is-hidden');
+  loadingScreen.setAttribute('aria-hidden','true');
+  preloadFrames()
+ }
+}
 function frameIsWanted(index){
+ if(loadingFrames)return true;
  if(index===0||index===cur)return true;
  if(still||p>=.80)return false;
  for(let offset=0;offset<FRAME_BUFFER;offset++)if(frameAt(offset)===index)return true;
@@ -155,12 +172,20 @@ function loadFrame(index){
  const image=new Image();
  imgs[index]=image;
  image.decoding='async';
- image.fetchPriority=index===cur?'high':'low';
- image.onload=()=>{if(index===cur||(cur>=LOOP&&index===cur-LOOP))draw();preloadFrames()};
+ image.fetchPriority=index===cur?'high':loadingFrames?'auto':'low';
+ image.onload=()=>{
+  failedFrames.delete(index);
+  if(loadingFrames)loadedFrames++;
+  if(index===cur||(cur>=LOOP&&index===cur-LOOP))draw();
+  if(loadingFrames)updateLoadingScreen();
+  preloadFrames()
+ };
  image.onerror=()=>{
   console.error('Unable to load cloud frame '+index);
   if(imgs[index]===image)imgs[index]=null;
-  setTimeout(()=>{if(frameIsWanted(index))loadFrame(index)},1000)
+  failedFrames.add(index);
+  if(loadingFrames)updateLoadingScreen();
+  setTimeout(()=>{if(imgs[index]!==image&&frameIsWanted(index))loadFrame(index)},2000)
  };
  image.src=FRAMES[index]
 }
@@ -174,7 +199,7 @@ function preloadFrames(){
    loadFrame(index)
   }
  }
- for(let index=1;index<N;index++)if(!keep.has(index)&&imgs[index]?.complete)imgs[index]=null
+ if(!loadingFrames)for(let index=1;index<N;index++)if(!keep.has(index)&&imgs[index]?.complete)imgs[index]=null
 }
 const makingof=document.getElementById('makingof'),MAKINGOF_FPS=12,MAKINGOF_COUNT=129;
 let makingofFrame=0,makingofNext=null,makingofReady=false,makingofLast=0,makingofAcc=0;
@@ -231,7 +256,7 @@ function draw(){ctx.clearRect(0,0,W,H);
  if(cur>=LOOP){const fade=(cur-LOOP+1)/X;ctx.globalCompositeOperation='lighter';put(cur,1-fade);put(cur-LOOP,fade);ctx.globalCompositeOperation='source-over'}
  else put(cur,1)} /* fondu croisé de la dernière image vers la première : boucle sans saut */
 function tick(now){
- if(p<.80&&!still){
+ if(!loadingFrames&&p<.80&&!still){
   const next=cur>=N-1?X:cur+1,step=1000/FPS;
   if(imgs[next]?.complete&&imgs[next].naturalWidth){
    acc+=now-last;
@@ -271,7 +296,8 @@ function update(){
 }
 addEventListener('scroll',()=>requestAnimationFrame(update),{passive:true});
 addEventListener('resize',()=>{size();update()});
-preloadFrames();size();update();requestAnimationFrame(n=>{last=n;tick(n)});requestAnimationFrame(animateMakingof);
+preloadFrames();for(let index=0;index<N;index++)loadFrame(index);
+size();update();requestAnimationFrame(n=>{last=n;tick(n)});requestAnimationFrame(animateMakingof);
 </script>
 </body>
 </html>
